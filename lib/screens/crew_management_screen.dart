@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:transit_flow/widgets/custom_navbar.dart';
-import 'package:transit_flow/widgets/footer_widget.dart';
 
 class CrewManagementScreen extends StatelessWidget {
   @override
