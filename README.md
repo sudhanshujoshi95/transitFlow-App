@@ -1,6 +1,6 @@
 # transit_flow
 
-A new Flutter project.
+TransitFlow Web-Application.
 
 ## Getting Started
 
