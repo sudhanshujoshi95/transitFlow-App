@@ -1,10 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/schedules_screen.dart';
 import 'screens/crew_management_screen.dart';
 import 'screens/reports_screen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyABfKwbaGP8q21zY09esOULhGaQ14D6kq0",
+          appId: "1:367962602401:web:878df25367c0660b7629e0",
+          messagingSenderId: "367962602401",
+          projectId: "transit-flow"));
   runApp(MyApp());
 }
 
