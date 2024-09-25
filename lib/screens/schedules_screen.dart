@@ -1,8 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:transit_flow/data/models/bus_list_model.dart';
+import 'package:transit_flow/data/models/schedule_bus_model.dart';
+import 'package:transit_flow/data/services/scheduled_bus_services.dart';
 import 'package:transit_flow/widgets/custom_navbar.dart';
 import 'package:transit_flow/widgets/footer_widget.dart';
+import '../data/services/bus_services.dart'; // Import your bus service
 
-class ScheduleScreen extends StatelessWidget {
+class ScheduleScreen extends StatefulWidget {
+  @override
+  _ScheduleScreenState createState() => _ScheduleScreenState();
+}
+
+class _ScheduleScreenState extends State<ScheduleScreen> {
+  String? selectedBusNumber; // Variable to hold the selected bus number
+  TimeOfDay? selectedDepartureTime;
+  TimeOfDay? selectedArrivalTime;
+  final TextEditingController _departureLocationController =
+      TextEditingController();
+  final TextEditingController _arrivalLocationController =
+      TextEditingController();
+
+  // Utility function to format TimeOfDay to HH:mm format
+  String formatTime(TimeOfDay time) {
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, time.hour, time.minute);
+    return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -48,18 +72,109 @@ class ScheduleScreen extends StatelessWidget {
                                         TextStyle(fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 8),
-                                  Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16.0),
-                                      child: TextField(
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: 'Enter Bus Number',
+
+                                  // Fetch and display dropdown of bus numbers
+                                  FutureBuilder<List<String>>(
+                                    future: BusService().fetchAllBusNumbers(),
+                                    builder: (context, snapshot) {
+                                      if (snapshot.connectionState ==
+                                          ConnectionState.waiting) {
+                                        return const CircularProgressIndicator();
+                                      }
+                                      if (snapshot.hasError) {
+                                        return const Text(
+                                            'Error fetching bus numbers');
+                                      }
+
+                                      if (!snapshot.hasData ||
+                                          snapshot.data!.isEmpty) {
+                                        return const Text(
+                                            'No bus numbers available');
+                                      }
+
+                                      final busNumbers = snapshot.data!;
+
+                                      return Card(
+                                        elevation: 2,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          child: DropdownButton<String>(
+                                            value: selectedBusNumber,
+                                            hint:
+                                                const Text('Select Bus Number'),
+                                            isExpanded: true,
+                                            underline: Container(),
+                                            items: busNumbers.map((busNumber) {
+                                              return DropdownMenuItem<String>(
+                                                value: busNumber,
+                                                child: Text(busNumber),
+                                              );
+                                            }).toList(),
+                                            onChanged: (newValue) {
+                                              setState(() {
+                                                selectedBusNumber = newValue;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            // Departure Time with DatePicker
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Departure Time',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      TimeOfDay? pickedTime =
+                                          await showTimePicker(
+                                        context: context,
+                                        initialTime: selectedDepartureTime ??
+                                            TimeOfDay.now(),
+                                      );
+                                      if (pickedTime != null) {
+                                        setState(() {
+                                          selectedDepartureTime = pickedTime;
+                                        });
+                                      }
+                                    },
+                                    child: AbsorbPointer(
+                                      child: Card(
+                                        elevation: 2,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              border: InputBorder.none,
+                                              hintText: selectedDepartureTime !=
+                                                      null
+                                                  ? formatTime(
+                                                      selectedDepartureTime!)
+                                                  : 'Select Departure Time',
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -68,26 +183,52 @@ class ScheduleScreen extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 16),
+
+                            // Arrival Time with DatePicker
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Departure Time',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
+                                  const Text(
+                                    'Arrival Time',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
+                                  ),
                                   const SizedBox(height: 8),
-                                  Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16.0),
-                                      child: TextField(
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: 'Enter Departure Time',
+                                  GestureDetector(
+                                    onTap: () async {
+                                      TimeOfDay? pickedTime =
+                                          await showTimePicker(
+                                        context: context,
+                                        initialTime: selectedArrivalTime ??
+                                            TimeOfDay.now(),
+                                      );
+                                      if (pickedTime != null) {
+                                        setState(() {
+                                          selectedArrivalTime = pickedTime;
+                                        });
+                                      }
+                                    },
+                                    child: AbsorbPointer(
+                                      child: Card(
+                                        elevation: 2,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12.0),
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 16.0),
+                                          child: TextField(
+                                            decoration: InputDecoration(
+                                              border: InputBorder.none,
+                                              hintText:
+                                                  selectedArrivalTime != null
+                                                      ? formatTime(
+                                                          selectedArrivalTime!)
+                                                      : 'Select Arrival Time',
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -97,56 +238,34 @@ class ScheduleScreen extends StatelessWidget {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
 
-                        // Arrival Time and Departure Location Input
+                        const SizedBox(height: 25),
+
+                        // Other inputs (locations) are here...
+                        // Departure Location and Arrival Location Inputs
                         Row(
                           children: [
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text('Arrival Time',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(height: 8),
-                                  Card(
-                                    elevation: 2,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.0),
-                                    ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                          horizontal: 16.0),
-                                      child: TextField(
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: 'Enter Arrival Time',
-                                        ),
-                                      ),
-                                    ),
+                                  const Text(
+                                    'Departure Location',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Departure Location',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
                                   const SizedBox(height: 8),
                                   Card(
                                     elevation: 2,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12.0),
                                     ),
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
                                           horizontal: 16.0),
                                       child: TextField(
+                                        controller:
+                                            _departureLocationController,
                                         decoration: InputDecoration(
                                           border: InputBorder.none,
                                           hintText: 'Enter Departure Location',
@@ -157,43 +276,61 @@ class ScheduleScreen extends StatelessWidget {
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Arrival Location Input
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Arrival Location',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            Card(
-                              elevation: 2,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12.0),
-                              ),
-                              child: const Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16.0),
-                                child: TextField(
-                                  decoration: InputDecoration(
-                                    border: InputBorder.none,
-                                    hintText: 'Enter Arrival Location',
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Arrival Location',
+                                    style:
+                                        TextStyle(fontWeight: FontWeight.bold),
                                   ),
-                                ),
+                                  const SizedBox(height: 8),
+                                  Card(
+                                    elevation: 2,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0),
+                                      child: TextField(
+                                        controller: _arrivalLocationController,
+                                        decoration: InputDecoration(
+                                          border: InputBorder.none,
+                                          hintText: 'Enter Arrival Location',
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
+
                         const SizedBox(height: 20),
 
                         // Add Schedule Button
-                        Container(
+                        SizedBox(
                           width: MediaQuery.of(context).size.width,
                           height: 35,
                           child: FloatingActionButton.extended(
                             onPressed: () {
                               // Handle the add schedule functionality here
+                              if (selectedBusNumber == null ||
+                                  selectedDepartureTime == null ||
+                                  selectedArrivalTime == null) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                        'Please fill in all the fields properly'),
+                                  ),
+                                );
+                                return;
+                              }
+                              // Add your schedule logic
                             },
                             label: const Text('Add Schedule',
                                 style: TextStyle(color: Colors.white)),
@@ -210,7 +347,6 @@ class ScheduleScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 16),
 
                 // Section 2: Upcoming Bus Journeys
@@ -236,54 +372,52 @@ class ScheduleScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 16),
 
-                          // Horizontal List of Bus Cards
-                          Container(
-                            height: 200,
-                            child: ListView(
-                              scrollDirection: Axis.horizontal,
-                              children: [
-                                _buildBusCard(
-                                  busNumber: 'Bus #101',
-                                  departureTime: '10:00 AM',
-                                  arrivalTime: '12:00 PM',
-                                  departureLocation: 'Station A',
-                                  arrivalLocation: 'Station B',
+                          // Horizontal List of Buses without Crew
+                          FutureBuilder<List<ScheduledBus>>(
+                            future: ScheduledBusService()
+                                .fetchBusesWithoutCrewAssigned(),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              }
+                              if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error: ${snapshot.error}'));
+                              }
+
+                              final buses = snapshot.data;
+
+                              if (buses == null || buses.isEmpty) {
+                                return const Center(
+                                    child: Text(
+                                        'No buses available without crew'));
+                              }
+
+                              return Container(
+                                height: 200,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: buses.length,
+                                  itemBuilder: (context, index) {
+                                    final bus = buses[index];
+                                    return _buildBusCard(
+                                      busNumber: bus
+                                          .busNumber, // Assuming 'number' is a field in Bus model
+                                      departureTime: bus
+                                          .departureTime, // Modify according to your model
+                                      arrivalTime: bus
+                                          .arrivalTime, // Modify according to your model
+                                      departureLocation: bus
+                                          .departureLocation, // Modify according to your model
+                                      arrivalLocation: bus
+                                          .arrivalLocation, // Modify according to your model
+                                    );
+                                  },
                                 ),
-                                const SizedBox(width: 16),
-                                _buildBusCard(
-                                  busNumber: 'Bus #102',
-                                  departureTime: '11:00 AM',
-                                  arrivalTime: '01:00 PM',
-                                  departureLocation: 'Station C',
-                                  arrivalLocation: 'Station D',
-                                ),
-                                const SizedBox(width: 16),
-                                _buildBusCard(
-                                  busNumber: 'Bus #107',
-                                  departureTime: '10:00 AM',
-                                  arrivalTime: '12:00 PM',
-                                  departureLocation: 'Station A',
-                                  arrivalLocation: 'Station B',
-                                ),
-                                const SizedBox(width: 16),
-                                _buildBusCard(
-                                  busNumber: 'Bus #108',
-                                  departureTime: '10:00 AM',
-                                  arrivalTime: '12:00 PM',
-                                  departureLocation: 'Station A',
-                                  arrivalLocation: 'Station B',
-                                ),
-                                const SizedBox(width: 16),
-                                _buildBusCard(
-                                  busNumber: 'Bus #110',
-                                  departureTime: '10:00 AM',
-                                  arrivalTime: '12:00 PM',
-                                  departureLocation: 'Station A',
-                                  arrivalLocation: 'Station B',
-                                ),
-                                // Add more bus cards as needed
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ],
                       ),

@@ -4,15 +4,6 @@
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
-
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
   -->
   <base href="$FLUTTER_BASE_HREF">
 
@@ -32,31 +23,38 @@
   <title>transit_flow</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Google Maps API -->
   <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCxOHmddxYpKP8fRP6wfP1ZV9dJUZauT_Q"></script>
+
+  <!-- Firebase SDKs (from CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-analytics.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
+
   <script>
-    // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+    // Your Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyABfKwbaGP8q21zY09esOULhGaQ14D6kq0",
+      authDomain: "transit-flow.firebaseapp.com",
+      projectId: "transit-flow",
+      storageBucket: "transit-flow.appspot.com",
+      messagingSenderId: "367962602401",
+      appId: "1:367962602401:web:878df25367c0660b7629e0",
+      measurementId: "G-E1MX1YD5FP"
+    };
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyABfKwbaGP8q21zY09esOULhGaQ14D6kq0",
-  authDomain: "transit-flow.firebaseapp.com",
-  projectId: "transit-flow",
-  storageBucket: "transit-flow.appspot.com",
-  messagingSenderId: "367962602401",
-  appId: "1:367962602401:web:878df25367c0660b7629e0",
-  measurementId: "G-E1MX1YD5FP"
-};
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+    // Enable Firebase Analytics
+    if (firebase.analytics) {
+      firebase.analytics();
+    }
+
+    // Initialize Firestore
+    const db = firebase.firestore();
   </script>
-  
+
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

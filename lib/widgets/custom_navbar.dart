@@ -60,10 +60,10 @@ class CustomNavBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: TextButton(
             onPressed: () {
-              Navigator.pushNamed(context, '/reports');
+              Navigator.pushNamed(context, '/busList');
             },
             child: const Text(
-              'Reports',
+              'Bus List',
               style: TextStyle(color: Colors.black, fontSize: 18),
             ),
           ),
