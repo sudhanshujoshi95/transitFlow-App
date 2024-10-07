@@ -341,15 +341,7 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
             const SizedBox(width: 16),
             // Crew List Section
             // Crew List Section (Updated to use CrewList)
-            CrewList(
-              crewMembers: [
-                {'name': 'Alice', 'status': 'Available'},
-                {'name': 'Bob', 'status': 'Occupied'},
-                {'name': 'Charlie', 'status': 'On Leave'},
-                {'name': 'David', 'status': 'Available'},
-                // Add more crew members here
-              ],
-            ),
+            CrewList(),
           ],
         ),
       ),

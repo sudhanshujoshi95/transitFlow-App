@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:transit_flow/data/models/crew_list_model.dart';
+import 'package:transit_flow/data/services/crew_services.dart';
 
+// CrewMemberTile remains the same
 class CrewMemberTile extends StatelessWidget {
   final String name;
   final String status;
@@ -11,13 +14,13 @@ class CrewMemberTile extends StatelessWidget {
   Widget build(BuildContext context) {
     Color statusColor;
     switch (status) {
-      case 'Available':
+      case 'available':
         statusColor = Colors.green;
         break;
-      case 'Occupied':
-        statusColor = Colors.orange;
+      case 'occupied':
+        statusColor = const Color.fromARGB(255, 229, 203, 37);
         break;
-      case 'On Leave':
+      case 'on leave':
         statusColor = Colors.red;
         break;
       default:
@@ -36,10 +39,9 @@ class CrewMemberTile extends StatelessWidget {
   }
 }
 
+// CrewList to fetch and display from Firestore
 class CrewList extends StatelessWidget {
-  final List<Map<String, String>> crewMembers;
-
-  const CrewList({Key? key, required this.crewMembers}) : super(key: key);
+  const CrewList({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +60,35 @@ class CrewList extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
+          // Use FutureBuilder to fetch crew members
           Expanded(
-            child: ListView(
-              children: crewMembers.map((crewMember) {
-                return CrewMemberTile(
-                  name: crewMember['name'] ?? '',
-                  status: crewMember['status'] ?? '',
+            child: FutureBuilder<List<CrewMember>>(
+              future: CrewServices
+                  .fetchCrewMembers(), // Fetch crew members from Firestore
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(
+                      child: Text('Error loading crew members'));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No crew members found'));
+                }
+
+                // If data is available, show the crew members
+                List<CrewMember> crewMembers = snapshot.data!;
+                return ListView.builder(
+                  itemCount: crewMembers.length,
+                  itemBuilder: (context, index) {
+                    return CrewMemberTile(
+                      name: crewMembers[index].name,
+                      status: crewMembers[index].status,
+                    );
+                  },
                 );
-              }).toList(),
+              },
             ),
           ),
         ],

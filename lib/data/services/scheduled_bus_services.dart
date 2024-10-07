@@ -4,6 +4,20 @@ import 'package:transit_flow/data/models/schedule_bus_model.dart';
 class ScheduledBusService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Fetch all scheduled buses (with and without crew assigned)
+  static Future<List<ScheduledBus>> fetchAllScheduledBuses() async {
+    try {
+      final snapshot =
+          await FirebaseFirestore.instance.collection('scheduled_buses').get();
+      return snapshot.docs
+          .map((doc) => ScheduledBus.fromDocument(doc))
+          .toList();
+    } catch (e) {
+      print('Error fetching all scheduled buses: $e');
+      return [];
+    }
+  }
+
   // Fetch bus schedules with crew assigned
   Future<List<ScheduledBus>> fetchBusesWithCrewAssigned() async {
     try {

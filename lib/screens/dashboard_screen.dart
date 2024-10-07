@@ -1,8 +1,68 @@
 import 'package:flutter/material.dart';
+import 'package:transit_flow/data/models/schedule_bus_model.dart';
+import 'package:transit_flow/data/services/bus_services.dart';
+import 'package:transit_flow/data/services/crew_services.dart';
+import 'package:transit_flow/data/services/scheduled_bus_services.dart';
 import 'package:transit_flow/widgets/maps.dart';
 import '../widgets/custom_navbar.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
+  @override
+  _DashboardScreenState createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  late Future<int> _totalBusesCount;
+  late Future<int> _totalCrewMembersCount;
+  late Future<int> _totalScheduledBuses;
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch the total buses count when the screen initializes
+    _totalBusesCount = fetchTotalBusesCount();
+    _totalCrewMembersCount = fetchTotalCrewMembersCount();
+    _totalScheduledBuses = fetchTotalScheduledBuses();
+  }
+
+  // Fetch the total count of buses from the service
+  Future<int> fetchTotalBusesCount() async {
+    try {
+      final busService = BusService();
+      final buses = await busService
+          .fetchAllBuses(); // Assume this returns a list of all buses
+      return buses.length; // Return the total number of buses
+    } catch (e) {
+      print('Error fetching total buses count: $e');
+      return 0; // Return 0 in case of error
+    }
+  }
+
+  // Fetch the total count of buses from the service
+  Future<int> fetchTotalCrewMembersCount() async {
+    try {
+      final crewService = CrewServices();
+      final crews = await CrewServices
+          .fetchCrewMembers(); // Assume this returns a list of all buses
+      return crews.length; // Return the total number of buses
+    } catch (e) {
+      print('Error fetching total buses count: $e');
+      return 0; // Return 0 in case of error
+    }
+  }
+
+  Future<int> fetchTotalScheduledBuses() async {
+    try {
+      final scheduled_bus = ScheduledBusService();
+      final scheduledBus = await ScheduledBusService
+          .fetchAllScheduledBuses(); // Assume this returns a list of all buses
+      return scheduledBus.length; // Return the total number of buses
+    } catch (e) {
+      print('Error fetching total buses count: $e');
+      return 0; // Return 0 in case of error
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -30,23 +90,86 @@ class DashboardScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildDashboardCard(
-                    icon: Icons.bus_alert,
-                    label: 'Active Buses',
-                    value: '15',
-                    color: Colors.blue,
+                  FutureBuilder<int>(
+                    future: _totalBusesCount,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildDashboardCard(
+                          icon: Icons.bus_alert,
+                          label: 'Total Buses',
+                          value: 'Loading...',
+                          color: Colors.blue,
+                        );
+                      } else if (snapshot.hasError) {
+                        return _buildDashboardCard(
+                          icon: Icons.bus_alert,
+                          label: 'Total Buses',
+                          value: 'Error',
+                          color: Colors.blue,
+                        );
+                      } else {
+                        return _buildDashboardCard(
+                          icon: Icons.bus_alert,
+                          label: 'Total Buses',
+                          value: snapshot.data.toString(),
+                          color: Colors.blue,
+                        );
+                      }
+                    },
                   ),
-                  _buildDashboardCard(
-                    icon: Icons.group,
-                    label: 'Crew Members',
-                    value: '120',
-                    color: Colors.green,
+                  FutureBuilder<int>(
+                    future: _totalCrewMembersCount,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildDashboardCard(
+                          icon: Icons.group,
+                          label: 'Total Crew Members',
+                          value: 'Loading...',
+                          color: Colors.green,
+                        );
+                      } else if (snapshot.hasError) {
+                        return _buildDashboardCard(
+                          icon: Icons.group,
+                          label: 'Total Crew Members',
+                          value: 'Error',
+                          color: Colors.green,
+                        );
+                      } else {
+                        return _buildDashboardCard(
+                          icon: Icons.group,
+                          label: 'Total Crew Members',
+                          value: snapshot.data.toString(),
+                          color: Colors.green,
+                        );
+                      }
+                    },
                   ),
-                  _buildDashboardCard(
-                    icon: Icons.schedule,
-                    label: 'Upcoming Shifts',
-                    value: '8',
-                    color: Colors.orange,
+                  FutureBuilder<int>(
+                    future: _totalScheduledBuses,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return _buildDashboardCard(
+                          icon: Icons.schedule,
+                          label: 'Upcoming Shifts',
+                          value: 'Loading...',
+                          color: Colors.orange,
+                        );
+                      } else if (snapshot.hasError) {
+                        return _buildDashboardCard(
+                          icon: Icons.schedule,
+                          label: 'Upcoming Shifts',
+                          value: 'Error',
+                          color: Colors.orange,
+                        );
+                      } else {
+                        return _buildDashboardCard(
+                          icon: Icons.group,
+                          label: 'Upcoming Shifts',
+                          value: snapshot.data.toString(),
+                          color: Colors.orange,
+                        );
+                      }
+                    },
                   ),
                 ],
               ),
