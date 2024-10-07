@@ -27,6 +27,55 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     return "${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}";
   }
 
+  void _addBusSchedule() async {
+    // Check if the fields are not empty
+    if (selectedBusNumber != null &&
+        selectedDepartureTime != null &&
+        selectedArrivalTime != null &&
+        _departureLocationController.text.isNotEmpty &&
+        _arrivalLocationController.text.isNotEmpty) {
+      // Create a ScheduledBus object
+      final ScheduledBus scheduleBus = ScheduledBus(
+        busNumber: selectedBusNumber!,
+        departureTime: selectedDepartureTime!.format(context),
+        arrivalTime: selectedArrivalTime!.format(context),
+        departureLocation: _departureLocationController.text,
+        arrivalLocation: _arrivalLocationController.text,
+        isCrewAssigned: false, // Initialize to false
+        crewMembers: [], // Initialize as an empty array
+      );
+
+      try {
+        // Call the service method to add the bus schedule
+        await ScheduledBusService().addScheduledBus(scheduleBus);
+
+        // If it reaches here, the schedule was added successfully
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Bus schedule added successfully!')),
+        );
+
+        // Clear the text fields
+        _departureLocationController.clear();
+        _arrivalLocationController.clear();
+        setState(() {
+          selectedBusNumber = null;
+          selectedDepartureTime = null;
+          selectedArrivalTime = null;
+        });
+      } catch (error) {
+        // Handle any errors that occur during the addition
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to add bus schedule!')),
+        );
+      }
+    } else {
+      // Show a message to fill all fields
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill all the fields!')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -330,7 +379,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                 );
                                 return;
                               }
-                              // Add your schedule logic
+
+                              _addBusSchedule(); // Add your schedule logic
                             },
                             label: const Text('Add Schedule',
                                 style: TextStyle(color: Colors.white)),

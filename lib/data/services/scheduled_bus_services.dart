@@ -58,4 +58,25 @@ class ScheduledBusService {
       print('Error updating scheduled bus: $e');
     }
   }
+
+  // Add a new bus schedule
+  Future<void> addScheduledBus(ScheduledBus scheduledBus) async {
+    try {
+      await _db.collection('scheduled_buses').add({
+        'busNumber': scheduledBus.busNumber,
+        'departureTime': scheduledBus.departureTime,
+        'arrivalTime': scheduledBus.arrivalTime,
+        'departureLocation': scheduledBus.departureLocation,
+        'arrivalLocation': scheduledBus.arrivalLocation,
+        'isCrewAssigned': scheduledBus.isCrewAssigned,
+        'crewMembers': scheduledBus.crewMembers
+                ?.map((member) => member.toMap())
+                .toList() ??
+            [],
+      });
+      print('Scheduled bus added successfully');
+    } catch (e) {
+      print('Error adding scheduled bus: $e');
+    }
+  }
 }
