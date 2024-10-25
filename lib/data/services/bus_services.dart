@@ -27,4 +27,49 @@ class BusService {
       return [];
     }
   }
+
+  // Fetch all existing bus IDs to determine the next ID
+  Future<String> getNextBusId() async {
+    try {
+      // Fetch all documents in the busList collection
+      final snapshot = await _db.collection('busList').get();
+
+      // Extract and parse numeric parts of existing bus IDs
+      List<int> busNumbers = snapshot.docs
+          .map((doc) => doc['busId'])
+          .where((id) => id.startsWith('bus_'))
+          .map((id) => int.tryParse(id.split('_')[1]) ?? 0)
+          .toList();
+
+      // Determine the next ID suffix
+      int nextNumber = (busNumbers.isEmpty
+              ? 0
+              : busNumbers.reduce((a, b) => a > b ? a : b)) +
+          1;
+
+      // Format as 'bus_XXX' with leading zeros
+      return 'bus_${nextNumber.toString().padLeft(3, '0')}';
+    } catch (e) {
+      print('Error generating next bus ID: $e');
+      return 'bus_001'; // Default ID if fetching fails
+    }
+  }
+
+  // Function to add a new bus
+  Future<void> addBus(Bus bus) async {
+    try {
+      await _db.collection('busList').add({
+        'busNumber': bus.busNumber,
+        'busType': bus.busType,
+        'capacity': bus.capacity,
+        'isAvailable': bus.isAvailable,
+        'assignedRoute':
+            bus.assignedRoute ?? 'Unassigned', // Fallback in Firestore
+        'busId': bus.busId,
+      });
+      print('New bus added successfully');
+    } catch (e) {
+      print('Error adding new bus: $e');
+    }
+  }
 }

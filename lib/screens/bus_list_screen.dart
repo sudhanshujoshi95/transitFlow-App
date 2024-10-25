@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:transit_flow/widgets/add_new_bus_dialog.dart';
 import '../data/models/bus_list_model.dart';
 import '../data/services/bus_services.dart';
 import '../widgets/custom_navbar.dart';
@@ -12,36 +13,68 @@ class BusListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: CustomNavBar(),
-      body: FutureBuilder<List<Bus>>(
-        future: _busService.fetchAllBuses(), // Fetch buses
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-                child:
-                    CircularProgressIndicator()); // Show loader while data is being fetched
-          }
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Navigate to the add new bus screen or open a dialog
+                    showDialog(
+                      context: context,
+                      builder: (context) => const AddBusDialog(),
+                    );
+                  },
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text(
+                    'Add New Bus',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        const Color.fromARGB(255, 53, 123, 180), // Button color
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<List<Bus>>(
+              future: _busService.fetchAllBuses(), // Fetch buses
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-          if (snapshot.hasError) {
-            return const Center(
-                child: Text('Error fetching bus data')); // Show error if any
-          }
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Error fetching bus data'));
+                }
 
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(
-                child: Text('No buses available')); // Show message if no data
-          }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('No buses available'));
+                }
 
-          // Display list of buses as cards
-          final buses = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.all(10),
-            itemCount: buses.length,
-            itemBuilder: (context, index) {
-              final bus = buses[index];
-              return BusCard(bus: bus);
-            },
-          );
-        },
+                final buses = snapshot.data!;
+                return ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: buses.length,
+                  itemBuilder: (context, index) {
+                    final bus = buses[index];
+                    return BusCard(bus: bus);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -65,10 +98,7 @@ class BusCard extends StatelessWidget {
           children: [
             Text(
               'Bus Number: ${bus.busNumber}',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
