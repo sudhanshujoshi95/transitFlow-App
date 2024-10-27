@@ -93,4 +93,14 @@ class ScheduledBusService {
       print('Error adding scheduled bus: $e');
     }
   }
+
+  // Delete a scheduled bus by document ID
+  Future<void> deleteScheduledBus(String docId) async {
+    try {
+      await _db.collection('scheduled_buses').doc(docId).delete();
+      print('Scheduled bus deleted successfully');
+    } catch (e) {
+      print('Error deleting scheduled bus: $e');
+    }
+  }
 }

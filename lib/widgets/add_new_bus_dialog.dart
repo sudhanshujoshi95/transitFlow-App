@@ -3,7 +3,9 @@ import 'package:transit_flow/data/models/bus_list_model.dart';
 import 'package:transit_flow/data/services/bus_services.dart';
 
 class AddBusDialog extends StatefulWidget {
-  const AddBusDialog({super.key});
+  final VoidCallback onBusAdded; // Callback to refresh bus list
+
+  const AddBusDialog({Key? key, required this.onBusAdded}) : super(key: key);
 
   @override
   _AddBusDialogState createState() => _AddBusDialogState();
@@ -12,11 +14,11 @@ class AddBusDialog extends StatefulWidget {
 class _AddBusDialogState extends State<AddBusDialog> {
   final BusService _busService = BusService();
   final TextEditingController _busNumberController = TextEditingController();
-  final TextEditingController _busTypeController = TextEditingController();
   final TextEditingController _capacityController = TextEditingController();
   final TextEditingController _assignedRouteController =
       TextEditingController();
 
+  String? _busType;
   bool _isAvailable = true;
   bool _isLoading = false;
 
@@ -30,25 +32,26 @@ class _AddBusDialogState extends State<AddBusDialog> {
     try {
       // Create a new Bus instance with the entered data
       Bus newBus = Bus(
-        busId: busId, // Optionally set or auto-generate this
+        busId: busId,
         busNumber: _busNumberController.text,
-        busType: _busTypeController.text,
+        busType: _busType ?? '',
         capacity: int.tryParse(_capacityController.text) ?? 0,
         isAvailable: _isAvailable,
         assignedRoute: _assignedRouteController.text.isNotEmpty
             ? _assignedRouteController.text
-            : 'Unassigned', // Set default if null
+            : 'Unassigned',
       );
 
       // Call the addBus function from BusService
       await _busService.addBus(newBus);
 
-      // Close the dialog after adding
+      // Notify parent widget to refresh list and close dialog
+      widget.onBusAdded();
       Navigator.of(context).pop();
     } catch (e) {
       print('Error adding bus: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add bus')),
+        const SnackBar(content: Text('Failed to add bus')),
       );
     } finally {
       setState(() {
@@ -88,12 +91,23 @@ class _AddBusDialogState extends State<AddBusDialog> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: TextField(
-                      controller: _busTypeController,
+                    child: DropdownButtonFormField<String>(
+                      value: _busType,
+                      items: ['AC', 'NON-AC', 'Standard Bus', 'Other']
+                          .map((type) => DropdownMenuItem(
+                                value: type,
+                                child: Text(type),
+                              ))
+                          .toList(),
+                      onChanged: (value) => setState(() {
+                        _busType = value;
+                      }),
                       decoration: const InputDecoration(
                         labelText: 'Bus Type',
                         border: OutlineInputBorder(),
                       ),
+                      validator: (value) =>
+                          value == null ? 'Select a bus type' : null,
                     ),
                   ),
                 ],
@@ -156,29 +170,22 @@ class _AddBusDialogState extends State<AddBusDialog> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 53, 123, 180),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
-                    : const Text('Add Bus',
-                        style: TextStyle(color: Colors.white)),
+                    : const Text(
+                        'Add Bus',
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
               ),
             ],
           ),
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _busNumberController.dispose();
-    _busTypeController.dispose();
-    _capacityController.dispose();
-    _assignedRouteController.dispose();
-    super.dispose();
   }
 }

@@ -76,6 +76,20 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     }
   }
 
+  late Future<List<ScheduledBus>> _busesWithoutCrewFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initial fetching of buses without crew
+    _fetchBusesWithoutCrew();
+  }
+
+  void _fetchBusesWithoutCrew() {
+    _busesWithoutCrewFuture =
+        ScheduledBusService().fetchBusesWithoutCrewAssigned();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -424,8 +438,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
                           // Horizontal List of Buses without Crew
                           FutureBuilder<List<ScheduledBus>>(
-                            future: ScheduledBusService()
-                                .fetchBusesWithoutCrewAssigned(),
+                            future: _busesWithoutCrewFuture,
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
@@ -453,16 +466,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                                   itemBuilder: (context, index) {
                                     final bus = buses[index];
                                     return _buildBusCard(
-                                      busNumber: bus
-                                          .busNumber, // Assuming 'number' is a field in Bus model
-                                      departureTime: bus
-                                          .departureTime, // Modify according to your model
-                                      arrivalTime: bus
-                                          .arrivalTime, // Modify according to your model
-                                      departureLocation: bus
-                                          .departureLocation, // Modify according to your model
-                                      arrivalLocation: bus
-                                          .arrivalLocation, // Modify according to your model
+                                      context, // Pass the context to handle delete action
+                                      bus: bus,
                                     );
                                   },
                                 ),
@@ -474,6 +479,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                     ),
                   ),
                 ),
+
                 const SizedBox(height: 10),
                 FooterWidget(),
               ],
@@ -485,43 +491,82 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   // Bus Card Widget
-  Widget _buildBusCard({
-    required String busNumber,
-    required String departureTime,
-    required String arrivalTime,
-    required String departureLocation,
-    required String arrivalLocation,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
+  // Function to build each bus card
+  Widget _buildBusCard(BuildContext context, {required ScheduledBus bus}) {
+    return SizedBox(
+      width: 350,
       child: Card(
-        elevation: 8,
+        elevation: 4,
+        margin: const EdgeInsets.only(right: 16.0),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30.0),
+          borderRadius: BorderRadius.circular(12.0),
         ),
-        child: Container(
-          width: 400,
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                busNumber,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    bus.busNumber, // Display bus number
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Departure: ${bus.departureTime}'),
+                  Text('Arrival: ${bus.arrivalTime}'),
+                  Text('From: ${bus.departureLocation}'),
+                  Text('To: ${bus.arrivalLocation}'),
+                ],
               ),
-              const SizedBox(height: 8),
-              Text('Departure Time: $departureTime'),
-              const SizedBox(height: 4),
-              Text('Arrival Time: $arrivalTime'),
-              const SizedBox(height: 4),
-              Text('Departure Location: $departureLocation'),
-              const SizedBox(height: 4),
-              Text('Arrival Location: $arrivalLocation'),
-            ],
-          ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () async {
+                  // Show a confirmation dialog before deletion
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text('Confirm Deletion'),
+                        content: const Text(
+                            'Are you sure you want to delete this bus?'),
+                        actions: [
+                          TextButton(
+                            child: const Text('Cancel'),
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                            },
+                          ),
+                          TextButton(
+                            child: const Text('Delete'),
+                            onPressed: () {
+                              Navigator.of(context).pop(true);
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  // If confirmed, delete the bus and refresh the list
+                  if (confirm == true) {
+                    await ScheduledBusService().deleteScheduledBus(bus.docId!);
+                    setState(() {
+                      // Re-fetch the list or remove the item from the list
+                      _fetchBusesWithoutCrew();
+                    });
+                  }
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -72,4 +72,30 @@ class BusService {
       print('Error adding new bus: $e');
     }
   }
+
+  // Update an existing bus
+  Future<void> updateBus(String busId, Bus bus) async {
+    try {
+      await _db.collection('busList').doc(busId).update({
+        'busNumber': bus.busNumber,
+        'busType': bus.busType,
+        'capacity': bus.capacity,
+        'isAvailable': bus.isAvailable,
+        'assignedRoute': bus.assignedRoute ?? 'Unassigned',
+      });
+      print('Bus updated successfully with ID: $busId');
+    } catch (e) {
+      print('Error updating bus with ID $busId: $e');
+    }
+  }
+
+  // Delete a bus
+  Future<void> deleteBus(String busId) async {
+    try {
+      await _db.collection('busList').doc(busId).delete();
+      print('Bus deleted successfully with ID: $busId');
+    } catch (e) {
+      print('Error deleting bus with ID $busId: $e');
+    }
+  }
 }

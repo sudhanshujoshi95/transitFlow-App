@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:transit_flow/data/models/crew_list_model.dart';
 
 class ScheduledBus {
+  final String? docId;
   final String busNumber;
   final String departureTime;
   final String arrivalTime;
@@ -11,6 +12,7 @@ class ScheduledBus {
   final List<CrewMember>? crewMembers;
 
   ScheduledBus({
+    this.docId,
     required this.busNumber,
     required this.departureTime,
     required this.arrivalTime,
@@ -25,6 +27,7 @@ class ScheduledBus {
     final data = doc.data() as Map<String, dynamic>;
 
     return ScheduledBus(
+      docId: doc.id,
       busNumber: data['busNumber'] ?? '',
       departureTime: data['departureTime'] ?? '',
       arrivalTime: data['arrivalTime'] ?? '',
