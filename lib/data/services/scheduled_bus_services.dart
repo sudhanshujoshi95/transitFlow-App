@@ -52,22 +52,13 @@ class ScheduledBusService {
     }
   }
 
-  // Update bus schedules
-  Future<void> updateScheduledBus(ScheduledBus scheduledBus) async {
+  Future<void> assignCrewToScheduledBusesWithoutCrew(ScheduledBus bus) async {
     try {
-      await _db
-          .collection('scheduledBuses')
-          .doc(scheduledBus.busNumber)
-          .update({
-        'departureTime': scheduledBus.departureTime,
-        'arrivalTime': scheduledBus.arrivalTime,
-        'departureLocation': scheduledBus.departureLocation,
-        'arrivalLocation': scheduledBus.arrivalLocation,
-        'isCrewAssigned': scheduledBus.isCrewAssigned,
+      await _db.collection('scheduled_buses').doc(bus.docId).update({
+        'isCrewAssigned': bus.isCrewAssigned,
         'crewMembers':
-            scheduledBus.crewMembers!.map((member) => member.toMap()).toList(),
+            bus.crewMembers?.map((member) => member.toMap()).toList(),
       });
-      print('Scheduled bus updated successfully');
     } catch (e) {
       print('Error updating scheduled bus: $e');
     }

@@ -8,8 +8,8 @@ class ScheduledBus {
   final String arrivalTime;
   final String departureLocation;
   final String arrivalLocation;
-  final bool isCrewAssigned;
-  final List<CrewMember>? crewMembers;
+  late bool? isCrewAssigned = false;
+  List<CrewMember>? crewMembers;
 
   ScheduledBus({
     this.docId,

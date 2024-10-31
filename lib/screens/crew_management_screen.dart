@@ -1,6 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:transit_flow/data/models/crew_list_model.dart';
 import 'package:transit_flow/data/models/schedule_bus_model.dart';
+import 'package:transit_flow/data/services/bus_services.dart';
+import 'package:transit_flow/data/services/crew_services.dart';
 import 'package:transit_flow/data/services/scheduled_bus_services.dart';
+import 'package:transit_flow/widgets/assign_crew_dialog.dart';
 import 'package:transit_flow/widgets/crew_list.dart';
 import 'package:transit_flow/widgets/custom_navbar.dart';
 
@@ -12,6 +17,9 @@ class CrewManagementScreen extends StatefulWidget {
 }
 
 class _CrewManagementScreenState extends State<CrewManagementScreen> {
+  // final ScheduledBus bus;  // Pass the scheduled bus here
+  late List<CrewMember> crewList = []; // Pass crew list here
+
   List<ScheduledBus> busesWithoutCrew = [];
   bool isLoading = true;
 
@@ -19,6 +27,7 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
   void initState() {
     super.initState();
     _fetchBusesWithoutCrew();
+    _fetchCrewList(); // Fetch crew data
   }
 
   Future<void> _fetchBusesWithoutCrew() async {
@@ -27,6 +36,15 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
     setState(() {
       busesWithoutCrew = fetchedBuses;
       isLoading = false; // Update loading status
+    });
+  }
+
+  Future<void> _fetchCrewList() async {
+    // Assuming you have a service to fetch crew members
+    final fetchedCrew = await CrewServices
+        .fetchCrewMembers(); // Fetch the crew list from an API or service
+    setState(() {
+      crewList = fetchedCrew;
     });
   }
 
@@ -155,7 +173,41 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
                                                               8.0),
                                                       child: ElevatedButton(
                                                         onPressed: () {
-                                                          // Handle button press
+                                                          showDialog(
+                                                            context: context,
+                                                            builder: (context) {
+                                                              return AssignCrewDialog(
+                                                                bus: bus,
+                                                                crewList:
+                                                                    crewList,
+                                                                onSave: (bool
+                                                                        success,
+                                                                    List<CrewMember>
+                                                                        assignedCrew) async {
+                                                                  if (success) {
+                                                                    // Check if crew assignment was successful
+                                                                    try {
+                                                                      bus.isCrewAssigned =
+                                                                          true; // Update assignment status
+                                                                      bus.crewMembers =
+                                                                          assignedCrew; // Update crew members
+
+                                                                      // Call the service to assign crew to the bus
+                                                                      await ScheduledBusService()
+                                                                          .assignCrewToScheduledBusesWithoutCrew(
+                                                                              bus);
+                                                                      print(
+                                                                          'Crew assigned to bus ${bus.busNumber}');
+                                                                    } catch (e) {
+                                                                      print(
+                                                                          "Error assigning crew: $e");
+                                                                      // Optionally show an error dialog to the user
+                                                                    }
+                                                                  }
+                                                                },
+                                                              );
+                                                            },
+                                                          );
                                                         },
                                                         style: ElevatedButton
                                                             .styleFrom(
