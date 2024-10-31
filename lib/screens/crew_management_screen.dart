@@ -61,122 +61,140 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
                           const SizedBox(height: 8),
                           isLoading // Check if data is still loading
                               ? Center(child: CircularProgressIndicator())
-                              : LayoutBuilder(
-                                  builder: (context, constraints) {
-                                    final cardWidth =
-                                        350.0; // Width of each card
-                                    final cardHeight =
-                                        210.0; // Height of each card
-                                    final crossAxisCount =
-                                        (constraints.maxWidth / cardWidth)
-                                            .floor();
-                                    final itemCount = busesWithoutCrew
-                                        .length; // Replace with actual data count
-                                    final gridHeight = (itemCount /
-                                                crossAxisCount)
-                                            .ceil() *
-                                        (cardHeight +
-                                            15.0); // Total height for GridView
-
-                                    return Container(
-                                      height: gridHeight,
-                                      child: GridView.builder(
-                                        padding: EdgeInsets.zero,
-                                        gridDelegate:
-                                            SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: crossAxisCount,
-                                          childAspectRatio:
-                                              cardWidth / cardHeight,
-                                          mainAxisSpacing: 15.0,
-                                          crossAxisSpacing: 15.0,
+                              : busesWithoutCrew.isEmpty
+                                  ? const Center(
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: 50.0),
+                                        child: Text(
+                                          'No bus is Found without crew Assignment',
+                                          style: TextStyle(
+                                              fontSize: 16, color: Colors.grey),
+                                          textAlign: TextAlign.center,
                                         ),
-                                        itemCount: itemCount,
-                                        itemBuilder: (context, index) {
-                                          final bus = busesWithoutCrew[index];
-                                          return Card(
-                                            elevation: 8,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
+                                      ),
+                                    )
+                                  : LayoutBuilder(
+                                      builder: (context, constraints) {
+                                        final cardWidth =
+                                            350.0; // Width of each card
+                                        final cardHeight =
+                                            210.0; // Height of each card
+                                        final crossAxisCount =
+                                            (constraints.maxWidth / cardWidth)
+                                                .floor();
+                                        final itemCount = busesWithoutCrew
+                                            .length; // Replace with actual data count
+                                        final gridHeight = (itemCount /
+                                                    crossAxisCount)
+                                                .ceil() *
+                                            (cardHeight +
+                                                15.0); // Total height for GridView
+
+                                        return Container(
+                                          height: gridHeight,
+                                          child: GridView.builder(
+                                            padding: EdgeInsets.zero,
+                                            gridDelegate:
+                                                SliverGridDelegateWithFixedCrossAxisCount(
+                                              crossAxisCount: crossAxisCount,
+                                              childAspectRatio:
+                                                  cardWidth / cardHeight,
+                                              mainAxisSpacing: 15.0,
+                                              crossAxisSpacing: 15.0,
                                             ),
-                                            child: Column(
-                                              children: [
-                                                Expanded(
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            20.0),
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
-                                                      children: [
-                                                        Text(
-                                                          bus.busNumber,
-                                                          style:
-                                                              const TextStyle(
-                                                            fontSize: 16,
+                                            itemCount: itemCount,
+                                            itemBuilder: (context, index) {
+                                              final bus =
+                                                  busesWithoutCrew[index];
+                                              return Card(
+                                                elevation: 8,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(10),
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(20.0),
+                                                        child: Column(
+                                                          crossAxisAlignment:
+                                                              CrossAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Text(
+                                                              bus.busNumber,
+                                                              style:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                            ),
+                                                            const SizedBox(
+                                                                height: 8),
+                                                            Text(
+                                                                'Departure: ${bus.departureTime}'),
+                                                            Text(
+                                                                'Arrival: ${bus.arrivalTime}'),
+                                                            Text(
+                                                                'From: ${bus.departureLocation}'),
+                                                            Text(
+                                                                'To: ${bus.arrivalLocation}'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8.0),
+                                                      child: ElevatedButton(
+                                                        onPressed: () {
+                                                          // Handle button press
+                                                        },
+                                                        style: ElevatedButton
+                                                            .styleFrom(
+                                                          backgroundColor:
+                                                              const Color
+                                                                  .fromARGB(
+                                                                  255,
+                                                                  27,
+                                                                  129,
+                                                                  212), // Background color
+                                                          shape:
+                                                              RoundedRectangleBorder(
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                          ),
+                                                          minimumSize: const Size(
+                                                              120,
+                                                              40), // Button size
+                                                        ),
+                                                        child: const Text(
+                                                          'Assign',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                           ),
                                                         ),
-                                                        const SizedBox(
-                                                            height: 8),
-                                                        Text(
-                                                            'Departure: ${bus.departureTime}'),
-                                                        Text(
-                                                            'Arrival: ${bus.arrivalTime}'),
-                                                        Text(
-                                                            'From: ${bus.departureLocation}'),
-                                                        Text(
-                                                            'To: ${bus.arrivalLocation}'),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: ElevatedButton(
-                                                    onPressed: () {
-                                                      // Handle button press
-                                                    },
-                                                    style: ElevatedButton
-                                                        .styleFrom(
-                                                      backgroundColor: const Color
-                                                          .fromARGB(
-                                                          255,
-                                                          27,
-                                                          129,
-                                                          212), // Background color
-                                                      shape:
-                                                          RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(20),
-                                                      ),
-                                                      minimumSize: const Size(
-                                                          120,
-                                                          40), // Button size
-                                                    ),
-                                                    child: const Text(
-                                                      'Assign',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontWeight:
-                                                            FontWeight.bold,
                                                       ),
                                                     ),
-                                                  ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                ),
+                                              );
+                                            },
+                                          ),
+                                        );
+                                      },
+                                    ),
                         ],
                       ),
                     ),
