@@ -42,11 +42,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Future<int> fetchTotalCrewMembersCount() async {
     try {
       final crewService = CrewServices();
-      final crews = await CrewServices
-          .fetchCrewMembers(); // Assume this returns a list of all buses
-      return crews.length; // Return the total number of buses
+      final crews = await crewService.fetchCrewMembers(); // Use instance method
+      return crews.length; // Return the total number of crew members
     } catch (e) {
-      print('Error fetching total buses count: $e');
+      print('Error fetching total crew members count: $e');
       return 0; // Return 0 in case of error
     }
   }

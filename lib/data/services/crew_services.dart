@@ -1,4 +1,3 @@
-// crew_services.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:transit_flow/data/models/crew_list_model.dart';
 
@@ -6,14 +5,12 @@ class CrewServices {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   // Fetch crew members
-  static Future<List<CrewMember>> fetchCrewMembers() async {
+  Future<List<CrewMember>> fetchCrewMembers() async {
     try {
-      QuerySnapshot snapshot =
-          await FirebaseFirestore.instance.collection('crewMembers').get();
-      List<CrewMember> crewList = snapshot.docs.map((doc) {
+      QuerySnapshot snapshot = await _firestore.collection('crewMembers').get();
+      return snapshot.docs.map((doc) {
         return CrewMember.fromMap(doc.data() as Map<String, dynamic>);
       }).toList();
-      return crewList;
     } catch (e) {
       print('Error fetching crew members: $e');
       return [];
@@ -23,7 +20,10 @@ class CrewServices {
   // Add a new crew member
   Future<void> addCrewMember(CrewMember crewMember) async {
     try {
-      await _firestore.collection('crewMembers').add(crewMember.toMap());
+      await _firestore
+          .collection('crewMembers')
+          .doc(crewMember.crewId) // Using crewId as document ID
+          .set(crewMember.toMap());
     } catch (e) {
       print('Error adding crew member: $e');
     }

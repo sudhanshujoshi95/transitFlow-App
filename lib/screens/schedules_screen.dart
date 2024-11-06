@@ -28,52 +28,67 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   }
 
   void _addBusSchedule() async {
-    // Check if the fields are not empty
     if (selectedBusNumber != null &&
         selectedDepartureTime != null &&
         selectedArrivalTime != null &&
         _departureLocationController.text.isNotEmpty &&
         _arrivalLocationController.text.isNotEmpty) {
-      // Create a ScheduledBus object
-      final ScheduledBus scheduleBus = ScheduledBus(
+      // Format the times using the formatTime function
+      final departureTimeFormatted = formatTime(selectedDepartureTime!);
+      final arrivalTimeFormatted = formatTime(selectedArrivalTime!);
+
+      final scheduleBus = ScheduledBus(
         busNumber: selectedBusNumber!,
-        departureTime: selectedDepartureTime!.format(context),
-        arrivalTime: selectedArrivalTime!.format(context),
+        departureTime: departureTimeFormatted,
+        arrivalTime: arrivalTimeFormatted,
         departureLocation: _departureLocationController.text,
         arrivalLocation: _arrivalLocationController.text,
-        isCrewAssigned: false, // Initialize to false
-        crewMembers: [], // Initialize as an empty array
+        isCrewAssigned: false,
+        crewMembers: [],
       );
 
       try {
-        // Call the service method to add the bus schedule
-        await ScheduledBusService().addScheduledBus(scheduleBus);
+        // Check if there is a time overlap before adding the bus schedule
+        final hasOverlap =
+            await ScheduledBusService().checkTimeOverlap(scheduleBus);
+        if (hasOverlap) {
+          // Show a warning SnackBar if there is a time overlap
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Time overlap detected! Bus is already scheduled for this period of time. '),
+              backgroundColor: Color.fromARGB(255, 216, 81, 71),
+            ),
+          );
+          return; // Exit the function early
+        }
 
-        // If it reaches here, the schedule was added successfully
+        // Add the bus schedule if no overlap
+        await ScheduledBusService().addScheduledBus(scheduleBus, context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Bus schedule added successfully!')),
         );
-
-        // Clear the text fields
-        _departureLocationController.clear();
-        _arrivalLocationController.clear();
-        setState(() {
-          selectedBusNumber = null;
-          selectedDepartureTime = null;
-          selectedArrivalTime = null;
-        });
+        _clearInputs();
       } catch (error) {
-        // Handle any errors that occur during the addition
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Failed to add bus schedule!')),
         );
       }
     } else {
-      // Show a message to fill all fields
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please fill all the fields!')),
       );
     }
+  }
+
+  void _clearInputs() {
+    _departureLocationController.clear();
+    _arrivalLocationController.clear();
+    setState(() {
+      selectedBusNumber = null;
+      selectedDepartureTime = null;
+      selectedArrivalTime = null;
+    });
   }
 
   late Future<List<ScheduledBus>> _busesWithoutCrewFuture;

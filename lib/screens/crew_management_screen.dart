@@ -40,9 +40,9 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
   }
 
   Future<void> _fetchCrewList() async {
-    // Assuming you have a service to fetch crew members
-    final fetchedCrew = await CrewServices
-        .fetchCrewMembers(); // Fetch the crew list from an API or service
+    final crewService = CrewServices(); // Create an instance of CrewServices
+    final fetchedCrew =
+        await crewService.fetchCrewMembers(); // Call the instance method
     setState(() {
       crewList = fetchedCrew;
     });
@@ -321,75 +321,87 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
                                       itemCount: itemCount,
                                       itemBuilder: (context, index) {
                                         final bus = buses[index];
-                                        return Card(
-                                          elevation: 8,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(10),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Expanded(
-                                                child: Padding(
-                                                  padding: const EdgeInsets.all(
-                                                      20.0),
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Text(
-                                                        'Bus ${bus.busNumber}',
-                                                        style: const TextStyle(
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.bold,
+                                        return GestureDetector(
+                                          onTap: () async {
+                                            final crewMembers =
+                                                await ScheduledBusService()
+                                                    .fetchBusesWithCrewAssigned(); // Fetch crew members
+                                            _showBusDetailsDialog(context, bus);
+                                          },
+                                          child: Card(
+                                            elevation: 8,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Column(
+                                              children: [
+                                                Expanded(
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            20.0),
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .center,
+                                                      children: [
+                                                        Text(
+                                                          'Bus ${bus.busNumber}',
+                                                          style:
+                                                              const TextStyle(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                          ),
                                                         ),
+                                                        const SizedBox(
+                                                            height: 8),
+                                                        Text(
+                                                            'Departure: ${bus.departureTime}'),
+                                                        Text(
+                                                            'Arrival: ${bus.arrivalTime}'),
+                                                        Text(
+                                                            'From: ${bus.departureLocation}'),
+                                                        Text(
+                                                            'To: ${bus.arrivalLocation}'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(8.0),
+                                                  child: ElevatedButton(
+                                                    onPressed: () {
+                                                      // Handle button press (e.g., Edit bus schedule)
+                                                    },
+                                                    style: ElevatedButton
+                                                        .styleFrom(
+                                                      backgroundColor: Colors
+                                                          .green, // Background color
+                                                      shape:
+                                                          RoundedRectangleBorder(
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
                                                       ),
-                                                      const SizedBox(height: 8),
-                                                      Text(
-                                                          'Departure: ${bus.departureTime}'),
-                                                      Text(
-                                                          'Arrival: ${bus.arrivalTime}'),
-                                                      Text(
-                                                          'From: ${bus.departureLocation}'),
-                                                      Text(
-                                                          'To: ${bus.arrivalLocation}'),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: ElevatedButton(
-                                                  onPressed: () {
-                                                    // Handle button press (e.g., Edit bus schedule)
-                                                  },
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                    backgroundColor: Colors
-                                                        .green, // Background color
-                                                    shape:
-                                                        RoundedRectangleBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              20),
+                                                      minimumSize: const Size(
+                                                          120,
+                                                          40), // Button size
                                                     ),
-                                                    minimumSize: const Size(
-                                                        120, 40), // Button size
-                                                  ),
-                                                  child: const Text(
-                                                    'Edit',
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                    child: const Text(
+                                                      'Edit',
+                                                      style: TextStyle(
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         );
                                       },
@@ -415,6 +427,43 @@ class _CrewManagementScreenState extends State<CrewManagementScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  void _showBusDetailsDialog(BuildContext context, ScheduledBus bus) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Bus ${bus.busNumber} Details'),
+          content: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('Departure: ${bus.departureTime}'),
+              Text('Arrival: ${bus.arrivalTime}'),
+              Text('From: ${bus.departureLocation}'),
+              Text('To: ${bus.arrivalLocation}'),
+              const SizedBox(height: 16),
+              const Text('Assigned Crew:',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              if (bus.crewMembers != null && bus.crewMembers!.isNotEmpty)
+                ...bus.crewMembers!
+                    .map((crew) => Text('${crew.name} - ${crew.status}'))
+                    .toList()
+              else
+                const Text('No crew members assigned.'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

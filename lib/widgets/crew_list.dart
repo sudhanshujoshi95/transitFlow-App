@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:transit_flow/data/models/crew_list_model.dart';
 import 'package:transit_flow/data/services/crew_services.dart';
+import 'add_crew_dialog.dart'; // Import the dialog widget
 
 // CrewMemberTile remains the same
 class CrewMemberTile extends StatelessWidget {
@@ -40,8 +41,42 @@ class CrewMemberTile extends StatelessWidget {
 }
 
 // CrewList to fetch and display from Firestore
-class CrewList extends StatelessWidget {
+class CrewList extends StatefulWidget {
   const CrewList({Key? key}) : super(key: key);
+
+  @override
+  _CrewListState createState() => _CrewListState();
+}
+
+class _CrewListState extends State<CrewList> {
+  Future<List<CrewMember>>? _crewFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCrew();
+  }
+
+  // Method to load crew members
+  void _loadCrew() {
+    setState(() {
+      _crewFuture = CrewServices().fetchCrewMembers();
+    });
+  }
+
+  // Method to open the AddCrewDialog
+  void _openAddCrewDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AddCrewDialog(
+          onCrewAdded: (newCrew) {
+            _loadCrew(); // Refresh list after adding a crew member
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,16 +90,25 @@ class CrewList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Crew List',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          Row(
+            children: [
+              const Text(
+                'Crew List',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              const Spacer(),
+              // Add Crew button
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: _openAddCrewDialog,
+              ),
+            ],
           ),
           const SizedBox(height: 8),
           // Use FutureBuilder to fetch crew members
           Expanded(
             child: FutureBuilder<List<CrewMember>>(
-              future: CrewServices
-                  .fetchCrewMembers(), // Fetch crew members from Firestore
+              future: _crewFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
